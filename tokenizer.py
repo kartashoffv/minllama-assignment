@@ -9,7 +9,8 @@ from typing import List
 
 from sentencepiece import SentencePieceProcessor
 
-TOKENIZER_MODEL = "tokenizer.model" # the llama sentencepiece tokenizer model
+TOKENIZER_MODEL = "tokenizer.model"  # the llama sentencepiece tokenizer model
+
 
 class Tokenizer:
     def __init__(self, max_len=None, tokenizer_model=None):
@@ -25,14 +26,14 @@ class Tokenizer:
         self.eos_id: int = self.sp_model.eos_id()
         # Overwrite the default of pad_id=-1, which is problematic.
         self.pad_id: int = self.sp_model.piece_to_id("<0x00>")
-        #print(f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}")
+        # print(f"#words: {self.n_words} - BOS ID: {self.bos_id} - EOS ID: {self.eos_id}")
         assert self.sp_model.vocab_size() == self.sp_model.get_piece_size()
 
     def encode(self, s: str, bos: bool, eos: bool) -> List[int]:
         assert type(s) is str
         t = self.sp_model.encode(s)
         if self.max_len is not None and len(t) > self.max_len:
-            t = t[:self.max_len]
+            t = t[: self.max_len]
         if bos:
             t = [self.bos_id] + t
         if eos:
@@ -43,20 +44,18 @@ class Tokenizer:
         return self.sp_model.decode(t)
 
     def export(self):
-
         # get all the tokens (postprocessed) and their scores as floats
         tokens, scores = [], []
         for i in range(self.n_words):
-
             # decode the token and light postprocessing
             t = self.sp_model.id_to_piece(i)
             s = self.sp_model.get_score(i)
             if i == self.bos_id:
-                t = '\n<s>\n'
+                t = "\n<s>\n"
             elif i == self.eos_id:
-                t = '\n</s>\n'
-            t = t.replace('▁', ' ') # sentencepiece uses this character as whitespace
-            b = t.encode('utf-8') # bytes of this token, utf-8 encoded
+                t = "\n</s>\n"
+            t = t.replace("▁", " ")  # sentencepiece uses this character as whitespace
+            b = t.encode("utf-8")  # bytes of this token, utf-8 encoded
 
             tokens.append(b)
             scores.append(s)
@@ -66,16 +65,19 @@ class Tokenizer:
 
         # write to a binary file
         # the tokenizer.bin file is the same as .model file, but .bin
-        tokenizer_bin = self.model_path.replace('.model', '.bin')
-        with open(tokenizer_bin, 'wb') as f:
+        tokenizer_bin = self.model_path.replace(".model", ".bin")
+        with open(tokenizer_bin, "wb") as f:
             f.write(struct.pack("I", max_token_length))
             for bytes, score in zip(tokens, scores):
                 f.write(struct.pack("fI", score, len(bytes)))
                 f.write(bytes)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--tokenizer-model", type=str, help="optional path to custom tokenizer ")
+    parser.add_argument(
+        "-t", "--tokenizer-model", type=str, help="optional path to custom tokenizer "
+    )
     args = parser.parse_args()
 
     t = Tokenizer(args.tokenizer_model)
