@@ -45,7 +45,7 @@ class RMSNorm(torch.nn.Module):
             torch.Tensor: The normalized tensor.
         """
         # todo
-        # так и не смог нормально взять формулу из https://arxiv.org/pdf/1910.07467 - sanity_check не проходил.
+        # так и не смог нормально взять формулу из https://arxiv.org/pdf/1910.07467, так как sanity_check не проходил.
         return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
 
     def forward(self, x):
