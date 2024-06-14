@@ -225,7 +225,7 @@ class LlamaLayer(nn.Module):
         # 3) a residual connection
         x = x + attn_output
 
-        # 4) layer normalization on the output of the self-attention 
+        # 4) layer normalization on the output of the self-attention
         norm_x = self.ffn_norm(x)
 
         # 5) a feed-forward network on the layer-normalized output of the self-attention
